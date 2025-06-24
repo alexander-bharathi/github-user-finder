@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { GithubUserService } from '../../services/github-user.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'guf-github-users-list',
@@ -550,20 +551,46 @@ import { GithubUserService } from '../../services/github-user.service';
     }
   `]
 })
-export class GithubUsersListComponent {
+/**
+ * Component that handles searching and displaying GitHub users.
+ */
+export class GithubUsersListComponent implements OnDestroy {
+  /**
+   * The current search query string for GitHub user search.
+   * Defaults to 'angular' on load.
+   */
   searchQuery = 'angular';
+  /**
+   * Array to store the list of users returned from the search.
+   */
   users: any[] = [];
+  /**
+   * Stores any error message that occurs during the API call.
+   */
   error = '';
+  /**
+   * Indicates whether the application is currently loading user data.
+   */
   loading = false;
-
+  /** 
+   * Reference to active subscription for cleanup
+   **/
+  private searchSub!: Subscription;
+  /**
+   * Initializes the component and triggers a default user search.
+   * @param github - The service used to communicate with GitHub's API.
+   */
   constructor(private github: GithubUserService) {
     this.search();
   }
-
-  search() {
+  /**
+   * Performs a search for GitHub users based on the current search query.
+   * Handles success and error states, and updates UI state accordingly.
+   */
+  search(): void {
     this.error = '';
     this.loading = true;
-    this.github.searchUsers(this.searchQuery.trim()).subscribe({
+    this.searchSub = this.github.searchUsers(this.searchQuery.trim()).subscribe({
       next: data => {
         this.users = data;
         this.loading = false;
@@ -573,5 +600,13 @@ export class GithubUsersListComponent {
         this.loading = false;
       }
     });
+  }
+  /**
+   * Clean up active subscriptions when the component is destroyed.
+   */
+  ngOnDestroy(): void {
+    if (this.searchSub) {
+      this.searchSub.unsubscribe();
+    }
   }
 }

@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { GithubUserService } from '../../services/github-user.service';
-
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'guf-github-user',
@@ -485,15 +485,42 @@ import { GithubUserService } from '../../services/github-user.service';
   }
   `]
 })
-export class GithubUserComponent {
+/**
+ * Component for displaying GitHub user details and repositories.
+ */
+export class GithubUserComponent implements OnDestroy {
+  /**
+   * Stores the GitHub user profile data.
+   */
   user: any;
+  /**
+   * Array of repositories belonging to the user.
+   */
   repos: any[] = [];
+  /**
+   * Holds any error message if the user fetch fails.
+   */
   error = '';
+  /**
+   * Boolean to indicate if the data is still loading.
+   */
   loading = true;
-
-  constructor(private route: ActivatedRoute, private github: GithubUserService) {
+  /** 
+   * Subscription reference for cleanup
+   **/
+  private userSub!: Subscription;
+  /**
+   * Initializes the component by retrieving the GitHub username from the route,
+   * fetching user data and repositories, and setting relevant states.
+   *
+   * @param route - ActivatedRoute service for accessing route parameters.
+   * @param github - GithubUserService for fetching user and repository data.
+   */
+  constructor(
+    private route: ActivatedRoute,
+    private github: GithubUserService) {
     const username = this.route.snapshot.paramMap.get('username')!;
-    this.github.getUserWithRepos(username).subscribe({
+    this.userSub = this.github.getUserWithRepos(username).subscribe({
       next: (data: any) => {
         this.user = data.user;
         this.repos = data.repos;
@@ -504,5 +531,13 @@ export class GithubUserComponent {
         this.loading = false;
       }
     });
+  }
+  /**
+  * Clean up the subscription to prevent memory leaks.
+  */
+  ngOnDestroy(): void {
+    if (this.userSub) {
+      this.userSub.unsubscribe();
+    }
   }
 }

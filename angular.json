@@ -36,8 +36,10 @@
             ],
             "scripts": [],
             "server": "src/main.server.ts",
-            "outputMode": "static",
-            "ssr": false
+            "outputMode": "server",
+            "ssr": {  
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {

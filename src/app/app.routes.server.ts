@@ -4,5 +4,13 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: '**',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'users/:username',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'users',
+    renderMode: RenderMode.Server
   }
 ];
